@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -40,7 +41,7 @@ public class Tunnel {
 		String uri = baseUri + (subdomain != null ? subdomain : "?new");
 		
 		URL upstream =new URL(uri);
-		URLConnection connection = upstream.openConnection();
+		HttpURLConnection connection = (HttpURLConnection)upstream.openConnection();
 		connection.setDoOutput(true);
 		connection.setRequestProperty("Content-Type", "application/json");
 		connection.setConnectTimeout(5000);
@@ -55,6 +56,12 @@ public class Tunnel {
 		{
 			System.out.println(line);
 		}
+		
+		if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+			throw new IOException("localtunnel server returned an error, please try again");
+		}
+		
+		
 		//TODO continue to port localtunnel from Tunnel.js line 51
 		return null;
 	}
