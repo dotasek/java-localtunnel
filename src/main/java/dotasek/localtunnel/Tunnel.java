@@ -9,6 +9,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
+import com.google.gson.Gson;
+
 public class Tunnel {
 
 	private boolean closed;
@@ -34,7 +36,7 @@ public class Tunnel {
 		this.closed = false;
 	}
 
-	public String init() throws IOException {
+	public TunnelConnectionModel init() throws IOException {
 		String params = "{ responseType: 'json'}";
 		String baseUri = this.host + '/';
 		
@@ -51,19 +53,25 @@ public class Tunnel {
 		out.close();
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-		 
-		for (String line = in.readLine(); line != null; line = in.readLine())
-		{
-			System.out.println(line);
-		}
 		
-		if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+		
+		if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
 			throw new IOException("localtunnel server returned an error, please try again");
 		}
 		
+		Gson gson = new Gson();
+		TunnelConnectionResponseModel tunnelConnectionResponse = gson.fromJson(in, TunnelConnectionResponseModel.class);
 		
-		//TODO continue to port localtunnel from Tunnel.js line 51
-		return null;
+		Integer port = tunnelConnectionResponse.port;
+		String host = upstream.getHost();
+		Integer max_conn = tunnelConnectionResponse.max_conn_count != null ? tunnelConnectionResponse.max_conn_count : 1;
+		return new TunnelConnectionModel(
+				upstream.getHost(),
+				tunnelConnectionResponse.port,
+				tunnelConnectionResponse.id,
+				tunnelConnectionResponse.url,
+				max_conn
+				);
 	}
 
 	public void close() {
