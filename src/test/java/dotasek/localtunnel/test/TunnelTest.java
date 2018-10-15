@@ -1,10 +1,12 @@
 package dotasek.localtunnel.test;
 
+import java.util.Observable;
+
 import org.junit.Test;
 
 import dotasek.localtunnel.Tunnel;
 
-public class TunnelTest {
+public class TunnelTest  {
 	 @Test
 	    public void test1() throws Exception {
 		 Tunnel tunnel = new Tunnel(null, null);

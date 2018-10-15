@@ -6,9 +6,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Observable;
+
 import com.google.gson.Gson;
 
-public class Tunnel {
+public class Tunnel extends Observable {
 
 	private boolean closed;
 	
