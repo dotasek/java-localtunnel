@@ -9,8 +9,17 @@ public class TunnelCluster {
 		String remote_host;
 		Integer remote_port;
 		
-		public TunnelCluster() {
+		private static TunnelCluster tunnelCluster = null;
+		
+		private TunnelCluster(TunnelConnectionModel tunnelConnection) {
 			
+		}
+		
+		public static TunnelCluster getTunnelCluster(TunnelConnectionModel tunnelConnection) {
+			if (tunnelCluster == null) {
+				tunnelCluster = new TunnelCluster(tunnelConnection);
+			}
+			return tunnelCluster;
 		}
 		
 		public void open() throws UnknownHostException, IOException {

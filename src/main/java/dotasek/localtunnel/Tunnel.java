@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-
 import com.google.gson.Gson;
 
 public class Tunnel {
@@ -36,7 +33,7 @@ public class Tunnel {
 		this.closed = false;
 	}
 
-	public TunnelConnectionModel init() throws IOException {
+	private TunnelConnectionModel init() throws IOException {
 		String params = "{ responseType: 'json'}";
 		String baseUri = this.host + '/';
 		
@@ -74,6 +71,19 @@ public class Tunnel {
 				);
 	}
 
+	private void establish(TunnelConnectionModel tunnelConnection) {
+		
+		TunnelCluster tunnelCluster = TunnelCluster.getTunnelCluster(tunnelConnection);
+		
+		
+	}
+	
+	public void open() throws IOException {
+		TunnelConnectionModel tunnelConnection = null;
+		tunnelConnection = init();
+		establish(tunnelConnection);
+	}
+	
 	public void close() {
 		this.closed = true;
 	}
