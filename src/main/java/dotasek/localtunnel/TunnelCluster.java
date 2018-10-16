@@ -3,32 +3,27 @@ package dotasek.localtunnel;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.channels.SocketChannel;
 import java.util.Observable;
 import java.util.Observer;
 
-public class TunnelCluster implements Observer{
+public class TunnelCluster extends Observable {
 
 		String remote_host;
 		Integer remote_port;
 		
-		enum TunnelClusterEventType {
-			OPEN, //once + open
-			ERROR, 
-			DEAD,
-			REQUEST
-		}
+		String local_host;
+		Integer local_port;
 		
-		class TunnelClusterEvent {
-			final TunnelClusterEventType type;
-			public TunnelClusterEvent(TunnelClusterEventType type) {
-				this.type = type;
-			}
-		}
+		int tunnelCount;
 		
 		private static TunnelCluster tunnelCluster = null;
 		
+		private TunnelConnectionModel tunnelConnection;
+		
 		private TunnelCluster(TunnelConnectionModel tunnelConnection) {
-			
+			tunnelCount = 1;
+			this.tunnelConnection = tunnelConnection;
 		}
 		
 		public static TunnelCluster getTunnelCluster(TunnelConnectionModel tunnelConnection) {
@@ -39,38 +34,22 @@ public class TunnelCluster implements Observer{
 		}
 		
 		public void open() throws UnknownHostException, IOException {
-			/* 
-			var remote_host = opt.remote_host;
-			    var remote_port = opt.remote_port;
-
-			    var local_host = opt.local_host || 'localhost';
-			    var local_port = opt.local_port;
-
-			    debug('establishing tunnel %s:%s <> %s:%s', local_host, local_port, remote_host, remote_port);
-*/
-			    // connection to localtunnel server
-			   Socket remote = new Socket( remote_host, remote_port);
-			   remote.setKeepAlive(true);
-			   
-		}
-
-		public void update(Observable arg0, Object arg1) {
-			if (arg0 instanceof Tunnel && arg1 instanceof TunnelClusterEvent)
-			{
-				Tunnel tunnel = (Tunnel) arg0;
-				TunnelClusterEvent tunnelClusterEvent = (TunnelClusterEvent) arg1;
-				switch (tunnelClusterEvent.type) {
-					case OPEN: 
-						
-						break;
-					case ERROR: 
-						break;
-					case DEAD: 
-						break;
-					case REQUEST: 
-						break;
-				}
-			}
+			 
+			String remote_host = tunnelConnection.remote_host;
+			Integer remote_port = tunnelConnection.remote_port;
 			
+			String local_host = "localhost"; //opt.local_host || "localhost";
+			Integer local_port = 1234; //opt.local_port;
+
+			System.out.println("establishing tunnel " +  local_host + " " +  local_port + " <> " + remote_host + " " + remote_port);
+
+			    // connection to localtunnel server
+			Socket remote = new Socket( remote_host, remote_port);
+			
+			Socket local = new Socket(local_host, local_port);
+			   
+			System.out.println("Sockets established.");
+			 
 		}
+
 }

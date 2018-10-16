@@ -5,13 +5,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.Socket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Observable;
+import java.util.Observer;
 
 import com.google.gson.Gson;
 
-public class Tunnel extends Observable {
+public class Tunnel extends Observable implements Observer {
 
+	Gson gson = new Gson();
+	
 	private boolean closed;
 	
 	public boolean isClosed() {
@@ -26,6 +31,8 @@ public class Tunnel extends Observable {
 	
 	private String subdomain;
 	
+	private int tunnelCount;
+	
 	public Tunnel(String host, String subdomain) {
 		this.host = host;
 		if (this.host == null) {
@@ -35,6 +42,16 @@ public class Tunnel extends Observable {
 		this.closed = false;
 	}
 
+	
+	
+
+	public void open() throws IOException {
+		TunnelConnectionModel tunnelConnection = null;
+		tunnelConnection = init();
+		System.out.println("connected to tunnel:" + tunnelConnection.name + " " + tunnelConnection.remote_host + " " + tunnelConnection.remote_port);
+		establish(tunnelConnection);
+	}
+	
 	private TunnelConnectionModel init() throws IOException {
 		String params = "{ responseType: 'json'}";
 		String baseUri = this.host + '/';
@@ -55,10 +72,10 @@ public class Tunnel extends Observable {
 		
 		
 		if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+			//TODO return body message if available.
 			throw new IOException("localtunnel server returned an error, please try again");
 		}
 		
-		Gson gson = new Gson();
 		TunnelConnectionResponseModel tunnelConnectionResponse = gson.fromJson(in, TunnelConnectionResponseModel.class);
 		
 		Integer port = tunnelConnectionResponse.port;
@@ -73,21 +90,66 @@ public class Tunnel extends Observable {
 				);
 	}
 
-	private void establish(TunnelConnectionModel tunnelConnection) {
+	private void establish(TunnelConnectionModel tunnelConnection) throws UnknownHostException, IOException {
 		
 		TunnelCluster tunnelCluster = TunnelCluster.getTunnelCluster(tunnelConnection);
+		tunnelCluster.addObserver(this);
 		
+		tunnelCount = 0;
+		
+		for (int i = 0; i < tunnelConnection.max_conn; i++) {
+			tunnelCluster.open();
+		}
 		
 	}
 	
-	public void open() throws IOException {
-		TunnelConnectionModel tunnelConnection = null;
-		tunnelConnection = init();
-		establish(tunnelConnection);
-	}
+	private Socket socket;
 	
 	public void close() {
 		this.closed = true;
+		closeSocket();
+	}
+
+
+	private void closeSocket() {
+		if (socket != null) {
+			try {
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void update(Observable arg0, Object arg1) {
+		if (arg1 instanceof TunnelEvent)
+		{
+			TunnelEvent tunnelEvent = (TunnelEvent) arg1;
+			switch (tunnelEvent.type) {
+				case OPEN: 
+					//once!
+					//TODO
+					//tunnel.emit(url)
+					tunnelCount++;
+					this.socket = tunnelEvent.socket;
+					if (closed) {
+						closeSocket();
+					}
+					
+					System.out.println("tunnel open [total: " + tunnelCount + "]");
+					break;
+				case ERROR: 
+					//TODO
+					//self.emit(error)
+					break;
+				case DEAD: 
+					break;
+				case REQUEST: 
+					break;
+			}
+		}
+		
 	}
 	
 }
